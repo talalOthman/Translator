@@ -10,7 +10,8 @@ import Select from "@mui/material/Select";
 
 const instance = axios.create({
   headers: {
-    "X-RapidAPI-Key": process.env.REACT_APP_PRIVATE_KEY,
+    // "X-RapidAPI-Key": process.env.REACT_APP_PRIVATE_KEY,
+    "X-RapidAPI-Key": "ffa899c765msh8c6c4802415ff36p18a85ejsn5a1ca67e1269",
     "X-RapidAPI-Host": "text-translator2.p.rapidapi.com",
     "content-type": "application/x-www-form-urlencoded",
   },
