@@ -138,7 +138,7 @@ const HomePage = () => {
           />
         </div>
       </div>
-      <Button variant="contained" type="submit">
+      <Button variant="contained" type="submit" disabled={isLoading ? true : false}>
         Translate
       </Button>
     </form>
