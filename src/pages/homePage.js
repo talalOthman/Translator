@@ -1,54 +1,46 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import "../css/homePage.css";
 import { Button, TextField, CircularProgress } from "@mui/material";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
+import { useFormik } from "formik";
+import * as yup from "yup";
+import { instance, URL } from "../api/instance";
 
-
-const instance = axios.create({
-  headers: {
-    // "X-RapidAPI-Key": process.env.REACT_APP_PRIVATE_KEY,
-    "X-RapidAPI-Key": "ffa899c765msh8c6c4802415ff36p18a85ejsn5a1ca67e1269",
-    "X-RapidAPI-Host": "text-translator2.p.rapidapi.com",
-    "content-type": "application/x-www-form-urlencoded",
-  },
+const validationSchema = yup.object({
+  sourceLanguage: yup.string().required("Source language is required"),
+  targetLanguage: yup.string().required("Target language is required"),
+  inputText: yup.string("Enter input text").required("Input text is required"),
 });
 
-const URL = "https://text-translator2.p.rapidapi.com";
-
 const HomePage = () => {
-  const [translateData, setTranslateData] = useState({});
   const [result, setResult] = useState({});
   const [languages, setLanguages] = useState([]);
-  const [targetLanguage, setTargetLanguage] = useState("");
-  const [sourceLanguage, setSourceLanguage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-    useEffect( () =>{
-       setIsLoading(true);
-      instance
-        .get(`${URL}/getLanguages`)
-        .then((response) => {
-          const newArray = [...response.data.data.languages];
-          setLanguages(newArray);
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }, []);
+  useEffect(() => {
+    setIsLoading(true);
+    instance
+      .get(`${URL}/getLanguages`)
+      .then((response) => {
+        const newArray = [...response.data.data.languages];
+        setLanguages(newArray);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = (values) => {
     setIsLoading(true);
     instance
       .post(`${URL}/translate`, {
-        source_language: sourceLanguage,
-        target_language: targetLanguage,
-        text: translateData,
+        source_language: values.sourceLanguage,
+        target_language: values.targetLanguage,
+        text: values.inputText,
       })
       .then((response) => {
         setResult({
@@ -62,20 +54,19 @@ const HomePage = () => {
       });
   };
 
-  const handleChange = (event) => {
-    setTranslateData(event.target.value);
-  };
 
-  const handleTargetChange = (event) => {
-    setTargetLanguage(event.target.value);
-  };
-
-  const handleSourceChange = (event) => {
-    setSourceLanguage(event.target.value);
-  };
+  const formik = useFormik({
+    initialValues: {
+      sourceLanguage: "",
+      targetLanguage: "",
+      inputText: "",
+    },
+    validationSchema: validationSchema,
+    onSubmit: handleSubmit,
+  });
 
   return (
-    <form onSubmit={handleSubmit} className="mainContainer">
+    <form onSubmit={formik.handleSubmit} className="mainContainer">
       <div className="translationContainer">
         <div className="inputContainer">
           <FormControl variant="standard">
@@ -83,10 +74,17 @@ const HomePage = () => {
               Source Language
             </InputLabel>
             <Select
-              value={sourceLanguage}
-              onChange={handleSourceChange}
-              labelId="demo-simple-select-standard-label"
-              id="demo-simple-select-standard"
+              value={formik.values.sourceLanguage}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.sourceLanguage &&
+                Boolean(formik.errors.sourceLanguage)
+              }
+              helperText={
+                formik.touched.sourceLanguage && formik.errors.sourceLanguage
+              }
+              id="sourceLanguage"
+              name="sourceLanguage"
               disabled={isLoading ? true : false}
             >
               {languages.map((language, index) => (
@@ -98,12 +96,21 @@ const HomePage = () => {
           </FormControl>
 
           <TextField
-            id="outlined-multiline-static"
+            value={formik.values.inputText}
+            onChange={formik.handleChange}
+            error={
+              formik.touched.inputText &&
+              Boolean(formik.errors.inputText)
+            }
+            helperText={
+              formik.touched.inputText && formik.errors.inputText
+            }
+            id="inputText"
+            name="inputText"
             label="Input Text"
             multiline
             rows={4}
             disabled={isLoading ? true : false}
-            onChange={handleChange}
           />
         </div>
         <div className="spinner">{isLoading && <CircularProgress />}</div>
@@ -114,10 +121,17 @@ const HomePage = () => {
               Target Language
             </InputLabel>
             <Select
-              value={targetLanguage}
-              onChange={handleTargetChange}
-              labelId="demo-simple-select-standard-label"
-              id="demo-simple-select-standard"
+              value={formik.values.targetLanguage}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.targetLanguage &&
+                Boolean(formik.errors.targetLanguage)
+              }
+              helperText={
+                formik.touched.targetLanguage && formik.errors.targetLanguage
+              }
+              id="targetLanguage"
+              name="targetLanguage"
               disabled={isLoading ? true : false}
             >
               {languages.map((language, index) => (
@@ -140,7 +154,11 @@ const HomePage = () => {
           />
         </div>
       </div>
-      <Button variant="contained" type="submit" disabled={isLoading ? true : false}>
+      <Button
+        variant="contained"
+        type="submit"
+        disabled={isLoading ? true : false}
+      >
         Translate
       </Button>
     </form>
